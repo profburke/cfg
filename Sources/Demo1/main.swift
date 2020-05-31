@@ -1,9 +1,10 @@
 //
-//  Types.swift
-//  CFG
+//  main.swift
+//  CFG.Demo1
+//  
 //
-//  Created by Matthew M. Burke on 4/7/15.
-//  Copyright (c) 2015-2020 BlueDino Software (http://bluedino.net)
+//  Created by Matthew M. Burke on 5/31/20.
+//  Copyright (c) 2020 BlueDino Software (http://bluedino.net)
 //
 //  Redistribution and use in source and binary forms, with or without modification, are permitted provided
 //  that the following conditions are met:
@@ -27,54 +28,49 @@
 //  OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-import Foundation
+import CFG
 
-// TODO: make symbols flyweights?
-public class Symbol: Hashable {
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(self))
+// https://en.wikipedia.org/wiki/How_now_brown_cow
+
+// need to think this through more...
+// also, note use of T(" ") in the start rule below is a hack...
+func format(_ derivation: [Terminal]) -> String {
+    var result = ""
+    for terminal in derivation {
+        result += "\(terminal)"
+    }
+    return result
+}
+
+let START: Nonterminal = "START"
+let HOWNOW: Terminal = "How now"
+let ADJECTIVES: Nonterminal = "ADJECTIVES"
+let ADJECTIVE: Nonterminal = "ADJECTIVE"
+let MAMMAL: Nonterminal = "MAMMAL"
+
+let rules = Set<Rule>([
+    START --> [HOWNOW, T(", "), ADJECTIVES, T(" "), MAMMAL, T(".")],
+
+    ADJECTIVES --> [ADJECTIVES, T(", "), ADJECTIVE] ||| [ADJECTIVE],
+
+    ADJECTIVE --> [T("brown")] ||| [T("big")] ||| [T("scary")],
+
+    MAMMAL --> [T("cow")] ||| [T("wolf")] ||| [T("bear")]
+])
+
+let grammar = Grammar(rules: rules, start: START)
+
+for _ in 0..<10 {
+    let derivation = Derivation(start: [START], grammar: grammar)
+
+    while !derivation.isComplete() {
+        derivation.step()
     }
 
-    // TODO: this may be not a valid approach?
-    public static func ==(lhs: Symbol, rhs: Symbol) -> Bool {
-        return ObjectIdentifier(lhs) == ObjectIdentifier(rhs)
+    if let result = derivation.result() {
+        print(format(result))
+    } else {
+        print("no result")
     }
 }
 
-// NOTE: I cannot remember what I intended here...
-public class PrintingSymbol: Symbol, ExpressibleByStringLiteral, CustomStringConvertible {
-    let s: String
-
-    override init() {
-        s = ""
-    }
-
-    public required init (stringLiteral s: String) {
-        self.s = s
-    }
-
-    public var description: String {
-        get {
-            return s
-        }
-    }
-
-    static func ==(lhs:PrintingSymbol, rhs: PrintingSymbol) -> Bool {
-        return lhs.s == rhs.s
-    }
-}
-
-public class Terminal: PrintingSymbol {}
-
-// TODO: do nonterminals really need to be pritingsymbols?
-public class Nonterminal: PrintingSymbol {}
-
-// MARK: - convenience methods
-
-public func T(_ s: String) -> Terminal {
-  return Terminal(stringLiteral: s)
-}
-
-public func N(_ s: String) -> Nonterminal {
-  return Nonterminal(stringLiteral: s)
-}

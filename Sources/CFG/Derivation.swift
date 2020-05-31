@@ -1,5 +1,5 @@
 //
-//  Types.swift
+//  Derivation.swift
 //  CFG
 //
 //  Created by Matthew M. Burke on 4/7/15.
@@ -29,52 +29,48 @@
 
 import Foundation
 
-// TODO: make symbols flyweights?
-public class Symbol: Hashable {
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(ObjectIdentifier(self))
+public class Derivation {
+    // NOTE: start is an array because we may want to start a derivation from
+    //       an intermediate step
+    public let start: [Symbol]
+    public let grammar: Grammar
+    private(set) var intermediates: [[Symbol]]
+
+    public init(start: [Symbol], grammar: Grammar) {
+        self.start = start
+        self.grammar = grammar
+        intermediates = [start]
     }
 
-    // TODO: this may be not a valid approach?
-    public static func ==(lhs: Symbol, rhs: Symbol) -> Bool {
-        return ObjectIdentifier(lhs) == ObjectIdentifier(rhs)
-    }
-}
+    public func leftmost() -> Nonterminal? {
+        if let currentState = intermediates.last {
+            for s in currentState {
+                if let nt = s as? Nonterminal {
+                    return nt
+                }
+            }
+        }
 
-// NOTE: I cannot remember what I intended here...
-public class PrintingSymbol: Symbol, ExpressibleByStringLiteral, CustomStringConvertible {
-    let s: String
-
-    override init() {
-        s = ""
+        return nil
     }
 
-    public required init (stringLiteral s: String) {
-        self.s = s
+    public func isComplete() -> Bool {
+        return leftmost() == nil
     }
 
-    public var description: String {
-        get {
-            return s
+    public func result() -> [Terminal]? {
+        guard isComplete(), let result = intermediates.last as? [Terminal] else {
+            return nil
+        }
+
+        return result
+    }
+
+    // TODO: what if lets fail? should we signal somehow? throw?
+    public func step() {
+        if let leftmost = leftmost(), let rule = grammar.pickRule(v: leftmost),
+            let currentState = intermediates.last {
+            intermediates.append(rule.apply(to: currentState))
         }
     }
-
-    static func ==(lhs:PrintingSymbol, rhs: PrintingSymbol) -> Bool {
-        return lhs.s == rhs.s
-    }
-}
-
-public class Terminal: PrintingSymbol {}
-
-// TODO: do nonterminals really need to be pritingsymbols?
-public class Nonterminal: PrintingSymbol {}
-
-// MARK: - convenience methods
-
-public func T(_ s: String) -> Terminal {
-  return Terminal(stringLiteral: s)
-}
-
-public func N(_ s: String) -> Nonterminal {
-  return Nonterminal(stringLiteral: s)
 }
