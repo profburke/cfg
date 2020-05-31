@@ -15,7 +15,7 @@ issues I'm struggling with and I'll back-port improvements from those projects t
 
 Modify your Package.swift file to include CFG as a dependency:
 
-```
+```swift
 .package(url: "https://github.com/profburke/cfg.git", from: "0.1.0")
 ```
 *NOTE: Although I will try to keep this README file up to date, you may need to update the version number
@@ -95,4 +95,4 @@ It would be nice to have a site for this project that we could host on Github Pa
 
 ### License
 
-This project is licensed under the BSD 3-Clause License. For details, please read the [LICENSE]() file.
+This project is licensed under the BSD 3-Clause License. For details, please read the [LICENSE](https://github.com/profburke/cfg/blob/master/LICENSE) file.
