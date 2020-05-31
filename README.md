@@ -25,7 +25,7 @@ You need to also include "CFG" in your list of target dependencies.
 
 ### Example
 
-```
+```swift
 import CFG
 
 // Define terminals and nonterminals:
